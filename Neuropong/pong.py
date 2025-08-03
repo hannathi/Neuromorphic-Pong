@@ -90,7 +90,7 @@ while True:
     new_spikes = spike_mon.i[last_spike_count:]
 
     if len(new_spikes) > 0:
-        print("new spikes:" + new_spikes)
+        print(f"new spikes: {new_spikes}")
         if 0 in new_spikes:
             paddle.y -= paddle_speed  
         if 1 in new_spikes:
