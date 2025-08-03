@@ -18,12 +18,19 @@ v_reset = -70*mV
 
 #LIF definition
 eqs = '''
-dv/dt = (v_rest - v)/tau : volt
+dv/dt = (v_rest - v + I)/tau : volt
+I : volt
 '''
 
 #define 2 neurons
 neurons = NeuronGroup(2, eqs, threshold='v>v_threshold', reset='v = v_reset', method='exact')
 neurons.v = v_rest
+neurons.I = 0 * mV
+
+#spike monitor
+spike_mon = SpikeMonitor(neurons)
+net = Network(neurons, spike_mon)
+last_spike_count = 0
 
 #setup
 pygame.init()
@@ -68,10 +75,29 @@ while True:
 
     #Paddle logic
     if ball.centery < paddle.centery:
-        paddle.y -= paddle_speed
+    #ball is above paddle center
+        neurons.I[0] = 50 * mV  #excite neuron 0 
+        neurons.I[1] = 0 * mV   #inhibit neuron 1
     elif ball.centery > paddle.centery:
-        paddle.y += paddle_speed
+    #ball is below paddle center
+        neurons.I[0] = 0 * mV #inhibit neuron 0
+        neurons.I[1] = 50 * mV #excite neuron 1 
+    else:
+    #ball exactly at paddle center
+        neurons.I[:] = 0 * mV
     
+    net.run(1*ms, report=None)
+    new_spikes = spike_mon.i[last_spike_count:]
+
+    if len(new_spikes) > 0:
+        print("new spikes: {new_spikes}")
+        if 0 in new_spikes:
+            paddle.y -= paddle_speed  
+        if 1 in new_spikes:
+            paddle.y += paddle_speed  
+
+    last_spike_count = len(spike_mon.i)
+
     if paddle.y < 0:
         paddle.y = 0
     elif paddle.y > HEIGHT - paddle.height:
