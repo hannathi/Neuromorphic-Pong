@@ -36,13 +36,14 @@ last_spike_count = 0
 pygame.init()
 WIDTH, HEIGHT = 500, 500
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Neuromorphic pong", icontitle="Neuromorphic pong") 
 clock = pygame.time.Clock()
 
 #objects
 ball = pygame.Rect(WIDTH // 2, HEIGHT // 2, 15, 15)
 ball_speed = [4, 4]
 paddle = pygame.Rect(30, HEIGHT // 2 - 40, 10, 80)
-paddle_speed = 4
+paddle_speed = 18
 
 def reset():
     ball.center = (WIDTH // 2, HEIGHT // 2)
@@ -74,17 +75,19 @@ while True:
         ball_speed[1] = py_max(-5, py_min(ball_speed[1], 5))
 
     #Paddle logic
-    if ball.centery < paddle.centery:
-    #ball is above paddle center
-        neurons.I[0] = 50 * mV  #excite neuron 0 
-        neurons.I[1] = 0 * mV   #inhibit neuron 1
-    elif ball.centery > paddle.centery:
-    #ball is below paddle center
-        neurons.I[0] = 0 * mV #inhibit neuron 0
-        neurons.I[1] = 50 * mV #excite neuron 1 
+    if ball_speed[0] < 0:
+        prediction = ball.centery + ball_speed[1] * 10
+
+        if prediction < paddle.centery - 5:
+            neurons.I[0] = 50 * mV
+            neurons.I[1] = 0 * mV
+        elif prediction > paddle.centery + 5:
+            neurons.I[0] = 0 * mV
+            neurons.I[1] = 50 * mV
+        else:
+            neurons.I[:] = 0 * mV
     else:
-    #ball exactly at paddle center
-        neurons.I[:] = 0 * mV
+        neurons.I[:] = 0 * mV  #the paddle doesn't move if the ball is moving away from it
     
     net.run(1*ms, report=None)
     new_spikes = spike_mon.i[last_spike_count:]
