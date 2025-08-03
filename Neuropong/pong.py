@@ -19,7 +19,7 @@ v_reset = -70*mV
 #LIF definition
 eqs = '''
 dv/dt = (v_rest - v + I)/tau : volt
-I : volt
+dI/dt = -I/(5*ms) : volt
 '''
 
 #define 2 neurons
@@ -89,7 +89,7 @@ while True:
     else:
         neurons.I[:] = 0 * mV  #the paddle doesn't move if the ball is moving away from it
     
-    net.run(1*ms, report=None)
+    net.run(10*ms, report=None)
     new_spikes = spike_mon.i[last_spike_count:]
 
     if len(new_spikes) > 0:
