@@ -1,7 +1,29 @@
 #pong.py
 import pygame
 import sys
+
+py_min = min
+py_max = max
+
+from brian2 import *
 import random
+
+start_scope()  
+
+#neuron parameters
+tau = 10*ms
+v_rest = -70*mV
+v_threshold = -50*mV
+v_reset = -70*mV
+
+#LIF definition
+eqs = '''
+dv/dt = (v_rest - v)/tau : volt
+'''
+
+#define 2 neurons
+neurons = NeuronGroup(2, eqs, threshold='v>v_threshold', reset='v = v_reset', method='exact')
+neurons.v = v_rest
 
 #setup
 pygame.init()
@@ -42,7 +64,7 @@ while True:
     if ball.colliderect(paddle):
         ball_speed[0] *= -1
         ball_speed[1] += random.choice([-1, 0, 1])
-        ball_speed[1] = max(-5, min(ball_speed[1], 5))
+        ball_speed[1] = py_max(-5, py_min(ball_speed[1], 5))
 
     #Paddle logic
     if ball.centery < paddle.centery:
@@ -50,7 +72,11 @@ while True:
     elif ball.centery > paddle.centery:
         paddle.y += paddle_speed
     
-    paddle.y = max(0, min(paddle.y, HEIGHT - paddle.height))
+    if paddle.y < 0:
+        paddle.y = 0
+    elif paddle.y > HEIGHT - paddle.height:
+        paddle.y = HEIGHT - paddle.height
+
 
     #render game
     screen.fill((40, 30, 60))
